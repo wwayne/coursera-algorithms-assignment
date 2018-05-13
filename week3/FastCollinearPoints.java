@@ -6,6 +6,8 @@ import java.util.Arrays;
 public class FastCollinearPoints {
     private LineSegment[] segments;
     private int segmentAmount = 0;
+    private Point[] endPoints;
+    private double[] endPointSlope ;
     
     public FastCollinearPoints(Point[] pointList) {
         if (pointList == null) throw new IllegalArgumentException();
@@ -13,8 +15,8 @@ public class FastCollinearPoints {
 
         Point[] points = Arrays.copyOf(pointList, pointList.length);
         segments = new LineSegment[(int) Math.pow(points.length, 2)];
-        Point[] endPoints = new Point[(int) Math.pow(points.length, 2)];
-        double[] endPointSlope = new double[(int) Math.pow(points.length, 2)];
+        endPoints = new Point[2];
+        endPointSlope = new double[2];
         
         Arrays.sort(points);
 
@@ -27,7 +29,7 @@ public class FastCollinearPoints {
                 restPoints[j] = points[i + j + 1];
             }
             sortStart(originP, restPoints, slopes);
-            findCollinear(originP, restPoints, slopes, endPoints, endPointSlope);
+            findCollinear(originP, restPoints, slopes);
         }
 
         LineSegment[] segmentCopy = new LineSegment[segmentAmount];
@@ -35,6 +37,8 @@ public class FastCollinearPoints {
             segmentCopy[i] = segments[i];
         }
         segments = segmentCopy;
+        endPoints = null;
+        endPointSlope = null;
     }
     
     private void checkNullAndDuplicate(Point[] points) {
@@ -102,8 +106,7 @@ public class FastCollinearPoints {
         return c.compare(a, b) <= 0;
     }
     
-    private void findCollinear(Point originP, Point[] points, double[] slopes
-                                   , Point[] endPoints, double[] endPointSlope)
+    private void findCollinear(Point originP, Point[] points, double[] slopes)
     {
         int start = 0, end = 2;
         while (end < points.length) {
@@ -121,6 +124,9 @@ public class FastCollinearPoints {
                         }
                     }
                     if (!alreadyHasEndpoint) {
+                        if (segmentAmount == endPoints.length) {
+                            resizeEndPoint(endPoints.length * 2);
+                        }
                         endPoints[segmentAmount] = endPoint;
                         endPointSlope[segmentAmount] = slopes[start];
                         segments[segmentAmount++] = 
@@ -142,6 +148,10 @@ public class FastCollinearPoints {
                     }
                 }        
                 if (!alreadyHasEndpoint) {
+                    if (segmentAmount == endPoints.length) {
+                        resizeEndPoint(endPoints.length * 2);
+                    }
+                    
                     endPoints[segmentAmount] = endPoint;
                     endPointSlope[segmentAmount] = slopes[start];
                     segments[segmentAmount++] = 
@@ -157,6 +167,16 @@ public class FastCollinearPoints {
         }
     }
     
+    private void resizeEndPoint(int capacity) {
+        Point[] endPointsCopy = new Point[capacity];
+        double[] endPointSlopeCopy = new double[capacity];
+        for (int i = 0; i < endPoints.length; i++) {
+            endPointsCopy[i] = endPoints[i];
+            endPointSlopeCopy[i] = endPointSlope[i];
+        }
+        endPoints = endPointsCopy;
+        endPointSlope = endPointSlopeCopy;
+    }
     
     public int numberOfSegments() {
         return segmentAmount;
