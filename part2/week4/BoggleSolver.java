@@ -1,9 +1,12 @@
-import edu.princeton.cs.algs4.TrieSET;
 import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.StdOut;
 
+import java.util.Set;
+import java.util.TreeSet;
+
 public class BoggleSolver{
-  private TrieSET dic;
+  private final int R = 26;
+  private Trie dic;
   private BoggleBoard b;
   private int rowAmount;
   private int colAmount;
@@ -11,9 +14,55 @@ public class BoggleSolver{
   // Initializes the data structure using the given array of strings as the dictionary.
   // (You can assume each word in the dictionary contains only the uppercase letters A through Z.)
   public BoggleSolver(String[] dictionary) {
-    dic = new TrieSET();
+    dic = new Trie();
     for (String str: dictionary) {
       dic.add(str);
+    }
+  }
+  
+  private class Node {
+    private Node[] next = new Node[R];
+    private boolean isLast = false;
+  }
+  
+  private class Trie {
+    private Node root = new Node();
+    
+    public Node root() {
+      return root;
+    }
+    
+    // add new word
+    public void add(String word) {
+      root = addWord(root, word, 0);
+    }
+    
+    private Node addWord(Node n, String word, int index) {
+      if (n == null) n = new Node();
+      if (index == word.length()) {
+        n.isLast = true;
+        return n;
+      }
+      
+      char currentChar = word.charAt(index);
+      n.next[currentChar - 'A'] = addWord(n.next[currentChar - 'A'], word, index + 1);
+      return n;
+    }
+    
+    // if the word contains
+    public boolean contains(String word) {
+      return isCharContained(root, word, 0);
+    }
+    
+    private boolean isCharContained(Node n, String word, int index) {
+      if (n == null) return false;
+      if (index == word.length()) {
+        if (n.isLast) return true;
+        return false;
+      }
+      char currentChar = word.charAt(index);
+      Node nextNode = n.next[currentChar - 'A'];
+      return isCharContained(nextNode, word, index + 1);
     }
   }
 
@@ -22,44 +71,38 @@ public class BoggleSolver{
     b = board;
     rowAmount = b.rows();
     colAmount = b.cols();
-    TrieSET validWords = new TrieSET();
+    Set<String> validWords = new TreeSet<String>();
     boolean[][] isVisited = new boolean[rowAmount][colAmount];
     for (int row = 0; row < rowAmount; row++) {
       for (int col = 0; col < colAmount; col++) {
-        searchWord("", row, col, isVisited, dic, validWords);
+        searchWord("", row, col, isVisited, validWords, dic.root());
       }
     }
     return validWords;
   }
   
-  private void searchWord(String prefix, int row, int col, boolean[][] isVisited, TrieSET samePrefixWords, TrieSET validWords) {
-    if (row < 0 || row >= rowAmount || col < 0 || col >= colAmount || isVisited[row][col]) return;
-    String newLetter = "" + b.getLetter(row, col);
-    if (newLetter.equals("Q")) newLetter += "U";
-    String currentWord = prefix + newLetter;
-    isVisited[row][col] = true;
-    
-    TrieSET newSamePrefixWords = new TrieSET();
-    for (String word: samePrefixWords.keysWithPrefix(currentWord)) {
-      newSamePrefixWords.add(word);
-    }
-    if (newSamePrefixWords.isEmpty())  {
-      isVisited[row][col] = false;
-      return;
-    }
-    
-    if (currentWord.length() >= 3 && newSamePrefixWords.contains(currentWord)) {
+  private void searchWord(String prefix, int row, int col, boolean[][] isVisited, Set<String> validWords, Node node) {
+    if (row < 0 || row >= rowAmount || col < 0 || col >= colAmount || isVisited[row][col] || node == null) return;
+    char newChar = b.getLetter(row, col);
+    String currentWord = prefix + newChar;
+    if (newChar == 'Q') currentWord += "U";
+
+    if (currentWord.length() >= 3 && dic.contains(currentWord)) {
       validWords.add(currentWord);
     }
     
-    searchWord(currentWord, row + 1, col, isVisited, newSamePrefixWords, validWords);
-    searchWord(currentWord, row - 1, col, isVisited, newSamePrefixWords, validWords);
-    searchWord(currentWord, row, col + 1, isVisited, newSamePrefixWords, validWords);
-    searchWord(currentWord, row, col - 1, isVisited, newSamePrefixWords, validWords);
-    searchWord(currentWord, row + 1, col + 1, isVisited, newSamePrefixWords, validWords);
-    searchWord(currentWord, row + 1, col - 1, isVisited, newSamePrefixWords, validWords);
-    searchWord(currentWord, row - 1, col + 1, isVisited, newSamePrefixWords, validWords);
-    searchWord(currentWord, row - 1, col - 1, isVisited, newSamePrefixWords, validWords);
+    isVisited[row][col] = true;
+    Node newNode = node.next[newChar - 'A'];
+    if (newChar == 'Q' && newNode != null) newNode = newNode.next['U' - 'A'];
+    
+    searchWord(currentWord, row + 1, col, isVisited, validWords, newNode);
+    searchWord(currentWord, row - 1, col, isVisited, validWords, newNode);
+    searchWord(currentWord, row, col + 1, isVisited, validWords, newNode);
+    searchWord(currentWord, row, col - 1, isVisited, validWords, newNode);
+    searchWord(currentWord, row + 1, col + 1, isVisited, validWords, newNode);
+    searchWord(currentWord, row + 1, col - 1, isVisited, validWords, newNode);
+    searchWord(currentWord, row - 1, col + 1, isVisited, validWords, newNode);
+    searchWord(currentWord, row - 1, col - 1, isVisited, validWords, newNode);
     
     isVisited[row][col] = false;
   }
