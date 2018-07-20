@@ -25,7 +25,7 @@ public class BurrowsWheeler {
     BinaryStdOut.close();
   }
 
-    // apply Burrows-Wheeler inverse transform, reading from standard input and writing to standard output
+  // apply Burrows-Wheeler inverse transform, reading from standard input and writing to standard output
   public static void inverseTransform() { 
     int first = BinaryStdIn.readInt();
     String s = BinaryStdIn.readString();
