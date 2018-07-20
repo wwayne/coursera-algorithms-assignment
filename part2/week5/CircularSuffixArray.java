@@ -15,7 +15,7 @@ public class CircularSuffixArray {
     sort(0, len - 1, 0, s);
   }
   
-//  MSD implementation, stackoverflow and have problem for hex input...
+//  MSD implementation, stackoverflow and having problem for hex input...
 //
 //  private void sort(int lo, int hi, int d, int[] aux, String s) {
 //    if (hi - lo <= SizeForInsertionSort) {
@@ -45,7 +45,7 @@ public class CircularSuffixArray {
 //      sort(lo + count[r], lo + count[r + 1] - 1, d + 1, aux, s);
 //  }
   
-//  3-way quicksort implementaion, reported as stackoverflow...
+  //  3-way quicksort implementaion
   private void sort(int lo, int hi, int d, String s) {
     if (hi - lo <= SizeForInsertionSort) {
       insertionSort(lo, hi, s);
